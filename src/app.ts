@@ -2,6 +2,7 @@ import express, { Application } from "express";
 import dotenv from "dotenv"; //makes it easier to retrieve .env variables
 import cors from "cors"; //avoids the same origin policy browsers use
 
+//routes
 import productRoutes from "./routes/productRoutes";
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
@@ -27,7 +28,5 @@ app.use((req, res, next) => {
 
 //start server
 app.listen(PORT, () => {
-  console.log(
-    `Este servidor esta conectado a http://${process.env.DB_HOST}:${PORT}`
-  );
+  //console.log(`Este servidor esta conectado a la base de datos`);
 });

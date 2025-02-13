@@ -24,7 +24,6 @@ export const authenticateToken = (
   try {
     // Extract token from the Authorization header
     const authHeader = req.headers.authorization;
-
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       res
         .status(401)
@@ -42,6 +41,7 @@ export const authenticateToken = (
         return;
       }
       req.authUser = decoded;
+
       next();
     } catch (err) {
       res.status(403).json({ error: "Token is invalid." });

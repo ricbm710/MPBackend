@@ -21,7 +21,7 @@ export const getUserByEmailFromDb = async <T>(email: string): Promise<T> => {
   return result.rows[0] as T;
 };
 
-export const getUserByIdFromDb = async <T>(id: number): Promise<T> => {
+export const getUserByIdFromDb = async <T>(id: string): Promise<T> => {
   const result = await query(
     "SELECT name,phone,email FROM app_user WHERE id = $1",
     [id]
