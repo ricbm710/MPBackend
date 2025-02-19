@@ -126,7 +126,7 @@ export const modifyProduct = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { name, price, condition, description, city, imageFile } = req.body;
+  const { name, price, condition, description, city } = req.body;
   const productId = req.params.id;
 
   let imageData: string | undefined;
@@ -146,11 +146,18 @@ export const modifyProduct = async (
       res.status(400).json({ message: "No file uploaded" });
       return;
     }
-    imageData = await uploadImageToCloudinary(req.file.buffer);
+    if (req.file.mimetype === "text/html") {
+      //image is a Cloudinary URL, user didn't change it
+      imageData = "no change";
+    } else {
+      //image is an actual image, user changed it
+      imageData = await uploadImageToCloudinary(req.file.buffer);
+    }
   }
 
   try {
     const existingProduct = await getProductByIdFromDb<Product>(productId);
+
     if (!existingProduct) {
       res.status(404).json({ message: "Product not found" });
       return;
@@ -173,27 +180,41 @@ export const modifyProduct = async (
       }
     } else {
       //* For Cloudinary
-      if (existingProduct.image_name) {
-        const publicIdMatch =
-          existingProduct.image_name.match(/\/v\d+\/(.+)\.\w+$/);
-        const publicId = publicIdMatch ? publicIdMatch[1] : null;
+      if (imageData !== "no change") {
+        if (existingProduct.image_name) {
+          const publicIdMatch =
+            existingProduct.image_name.match(/\/v\d+\/(.+)\.\w+$/);
+          const publicId = publicIdMatch ? publicIdMatch[1] : null;
 
-        if (publicId) {
-          // Delete the old image from Cloudinary
-          await cloudinary.uploader.destroy(publicId);
+          if (publicId) {
+            // Delete the old image from Cloudinary
+            await cloudinary.uploader.destroy(publicId);
+          }
         }
       }
     }
     // Modify the product row taking the imageData
-    const updateResult = await updateProductFromDb(
-      productId,
-      name,
-      price,
-      condition,
-      description,
-      city,
-      imageData
-    );
+    let updateResult: number;
+    if (imageData === "no change") {
+      updateResult = await updateProductFromDb(
+        productId,
+        name,
+        price,
+        condition,
+        description,
+        city
+      );
+    } else {
+      updateResult = await updateProductFromDb(
+        productId,
+        name,
+        price,
+        condition,
+        description,
+        city,
+        imageData
+      );
+    }
 
     res.status(201).json({
       message: "Product updated successfully.",

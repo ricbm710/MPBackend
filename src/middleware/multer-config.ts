@@ -34,19 +34,54 @@ if (imageStorage === "local") {
   storage = multer.memoryStorage(); // Store in memory instead of disk
 }
 
+let fileFilter;
+
 // File filter for images
-const fileFilter = (
-  _req: Request,
-  file: Express.Multer.File,
-  cb: FileFilterCallback
-): void => {
-  //console.log("Filtering file:", file.originalname, "with type", file.mimetype);
-  if (file.mimetype.startsWith("image/")) {
+if (imageStorage === "local") {
+  fileFilter = (
+    _req: Request,
+    file: Express.Multer.File,
+    cb: FileFilterCallback
+  ): void => {
+    console.log(
+      "Filtering file:",
+      file.originalname,
+      "with type",
+      file.mimetype
+    );
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true); // Accept file
+    } else {
+      cb(new Error("Only image files are allowed baby!")); // Reject non-image files
+    }
+  };
+} else {
+  fileFilter = (
+    _req: Request,
+    file: Express.Multer.File,
+    cb: FileFilterCallback
+  ): void => {
+    console.log(
+      "Filtering file:",
+      file.originalname,
+      "with type",
+      file.mimetype
+    );
     cb(null, true); // Accept file
-  } else {
-    cb(new Error("Only image files are allowed!")); // Reject non-image files
-  }
-};
+  };
+}
+// const fileFilter = (
+//   _req: Request,
+//   file: Express.Multer.File,
+//   cb: FileFilterCallback
+// ): void => {
+//   console.log("Filtering file:", file.originalname, "with type", file.mimetype);
+//   if (file.mimetype.startsWith("image/")) {
+//     cb(null, true); // Accept file
+//   } else {
+//     cb(new Error("Only image files are allowed baby!")); // Reject non-image files
+//   }
+// };
 
 // Multer configuration
 export const upload = multer({

@@ -110,9 +110,9 @@ export const updateProductFromDb = async <T>(
   condition: string,
   description: string,
   city: string,
-  imageName: string
+  imageName?: string // Optional parameter
 ): Promise<number> => {
-  //Capitalize
+  // Capitalize
   const capitalizeFirstLetter = (str: string) =>
     str.charAt(0).toUpperCase() + str.slice(1);
 
@@ -120,32 +120,39 @@ export const updateProductFromDb = async <T>(
   const formattedCondition = capitalizeFirstLetter(condition);
   const formattedDescription = capitalizeFirstLetter(description);
 
-  const result = await query(
-    `
+  // Construct query dynamically based on imageName existence
+  const queryParams = [
+    id,
+    formattedName,
+    price,
+    formattedCondition,
+    formattedDescription,
+    city,
+  ];
+
+  let queryText = `
     UPDATE product
     SET name = $2,
-    price = $3,
-    product_condition = $4,
-    description = $5,
-    city = $6,
-    image_name =$7
-    WHERE id = $1 RETURNING id`,
-    [
-      id,
-      formattedName,
-      price,
-      formattedCondition,
-      formattedDescription,
-      city,
-      imageName,
-    ]
-  );
+        price = $3,
+        product_condition = $4,
+        description = $5,
+        city = $6`;
+
+  if (imageName) {
+    queryText += `, image_name = $7`;
+    queryParams.push(imageName);
+  }
+
+  queryText += ` WHERE id = $1 RETURNING id`;
+
+  const result = await query(queryText, queryParams);
+
   // Cast result to the expected type
-  const rows = result.rows as { id: number }[]; // Assert rows' type
+  const rows = result.rows as { id: number }[];
 
   if (rows.length === 0) {
     throw new Error("Failed to update the product.");
   }
 
-  return rows[0].id; // Safely access `id`
+  return rows[0].id;
 };
